@@ -1,22 +1,36 @@
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import RootProvider from "@/providers";
 import { Web3Modal } from "@web3modal/wagmi-react-native";
 import Authentification from '@/components/Authentification';
+import BankConnection from '@/components/BankConnection';
+import WebViewScreen from '@/components/WebViewScreen';
 
-export default function AuthentificationPage() {
+const Stack = createStackNavigator();
+
+const App = () => {
   return (
     <RootProvider>
-      <View style={styles.container}>
-        <Authentification />
-      </View>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="Authentification" component={Authentification} />
+          <Stack.Screen name="BankConnection" component={BankConnection} />
+          <Stack.Screen name="WebViewScreen" component={WebViewScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
       <Web3Modal />
     </RootProvider>
   );
-}
+};
+
+export default App;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Occupe tout l'espace disponible car il est tout seule (Sinon prend juste la place de son contenu)
-    backgroundColor: 'white',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
