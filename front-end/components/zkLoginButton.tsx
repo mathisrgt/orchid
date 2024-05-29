@@ -406,6 +406,9 @@ export default function ZkLoginButton() {
   }
 
   function loadAccounts(): AccountData[] {
+    if (typeof window === "undefined") {
+      return [];
+    }
     const dataRaw = sessionStorage.getItem(accountDataKey);
     if (!dataRaw) {
       return [];
