@@ -26,6 +26,7 @@ import { useEffect, useRef, useState } from "react";
 /* Configuration */
 
 import config from "./config.json";
+import { Button } from "@nextui-org/react";
 
 const NETWORK = "devnet";
 const MAX_EPOCH = 2; // keep ephemeral keys active for this many Sui epochs from now (1 epoch ~= 24h)
@@ -382,11 +383,11 @@ export default function ZkLoginButton() {
   /* Session storage */
 
   function saveSetupData(data: SetupData) {
-    sessionStorage.setItem(setupDataKey, JSON.stringify(data));
+    localStorage.setItem(setupDataKey, JSON.stringify(data));
   }
 
   function loadSetupData(): SetupData | null {
-    const dataRaw = sessionStorage.getItem(setupDataKey);
+    const dataRaw = localStorage.getItem(setupDataKey);
     if (!dataRaw) {
       return null;
     }
@@ -395,21 +396,21 @@ export default function ZkLoginButton() {
   }
 
   function clearSetupData(): void {
-    sessionStorage.removeItem(setupDataKey);
+    localStorage.removeItem(setupDataKey);
   }
 
   function saveAccount(account: AccountData): void {
     const newAccounts = [account, ...accounts.current];
-    sessionStorage.setItem(accountDataKey, JSON.stringify(newAccounts));
+    localStorage.setItem(accountDataKey, JSON.stringify(newAccounts));
     accounts.current = newAccounts;
     fetchBalances([account]);
   }
 
   function loadAccounts(): AccountData[] {
-    if (typeof window === "undefined") {
-      return [];
-    }
-    const dataRaw = sessionStorage.getItem(accountDataKey);
+    // if (typeof window === "undefined") {
+    //   return [];
+    // }
+    const dataRaw = localStorage.getItem(accountDataKey);
     if (!dataRaw) {
       return [];
     }
@@ -418,7 +419,7 @@ export default function ZkLoginButton() {
   }
 
   function clearState(): void {
-    sessionStorage.clear();
+    localStorage.clear();
     accounts.current = [];
     setBalances(new Map());
   }
@@ -432,37 +433,20 @@ export default function ZkLoginButton() {
     <div id="page">
       <Modal content={modalContent} />
 
-      <a
-        id="polymedia-logo"
-        href="https://polymedia.app"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <img
-          src="https://assets.polymedia.app/img/all/logo-nomargin-transparent-512x512.webp"
-          alt="Polymedia"
-        />
-      </a>
-
       <div id="network-indicator">
-        <label>{NETWORK}</label>
+        <label>{NETWORK.toUpperCase()}</label>
       </div>
-
-      <h1>Sui zkLogin demo</h1>
 
       <div id="login-buttons" className="section">
         <h2>Log in:</h2>
-        {openIdProviders.map((provider) => (
-          <button
-            className={`btn-login ${provider}`}
-            onClick={() => {
-              beginZkLogin(provider);
-            }}
-            key={provider}
-          >
-            {provider}
-          </button>
-        ))}
+
+        <Button
+          onClick={() => {
+            beginZkLogin("Google");
+          }}
+        >
+          Google
+        </Button>
       </div>
 
       {accounts.current.length > 0 && (
@@ -532,14 +516,14 @@ export default function ZkLoginButton() {
       )}
 
       <div className="section">
-        <button
-          className="btn-clear"
+        <Button
+          color="danger"
           onClick={() => {
             clearState();
           }}
         >
           🧨 CLEAR STATE
-        </button>
+        </Button>
       </div>
     </div>
   );
