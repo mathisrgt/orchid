@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ConnectButton } from "@mysten/dapp-kit";
 import BankConnection from '../components/BankConnection';
+import Dashboard from '../components/Dashboard';
 import NavBar from '../components/NavBar';
 import { Button } from '@nextui-org/react';
 
@@ -63,6 +64,8 @@ export default function Home() {
     switch (currentComponent) {
       case 'bankConnection':
         return <BankConnection onAuthenticate={handleAuthenticate} />;
+      case 'dashboard':
+        return <Dashboard />;
       case 'home':
       default:
         return (
