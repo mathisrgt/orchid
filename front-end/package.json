@@ -11,9 +11,9 @@
   "dependencies": {
     "@mysten/dapp-kit": "^0.13.2",
     "@mysten/sui.js": "^0.54.1",
-    "@nextui-org/react": "^2.3.6",
+    "@nextui-org/react": "^2.4.0",
     "@tanstack/react-query": "^5.39.0",
-    "framer-motion": "^11.2.6",
+    "framer-motion": "^11.2.8",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18"

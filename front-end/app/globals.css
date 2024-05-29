@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import 'tailwindcss/utilities.css';
+
+.bg-gradient-orchid {
+  background: linear-gradient(135deg, #A969E6, #FF9B93, #EABF6D);
+}
