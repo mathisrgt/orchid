@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useTable, Column, TableInstance } from 'react-table';
+import { useTable, Column, TableInstance, HeaderGroup, Cell, Row } from 'react-table';
 import { Button, Card } from '@nextui-org/react';
 
 interface Transaction {
@@ -115,20 +115,20 @@ export default function Dashboard() {
         <p className="text-lg font-bold mb-4">Transactions</p>
         <table {...getTableProps()} className="table-auto w-full">
           <thead>
-            {headerGroups.map(headerGroup => (
+            {headerGroups.map((headerGroup: HeaderGroup<Transaction>) => (
               <tr {...headerGroup.getHeaderGroupProps()} key={headerGroup.id}>
-                {headerGroup.headers.map(column => (
+                {headerGroup.headers.map((column: Column<Transaction>) => (
                   <th {...column.getHeaderProps()} key={column.id}>{column.render('Header')}</th>
                 ))}
               </tr>
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {rows.map(row => {
+            {rows.map((row: Row<Transaction>) => {
               prepareRow(row);
               return (
                 <tr {...row.getRowProps()} key={row.id}>
-                  {row.cells.map(cell => (
+                  {row.cells.map((cell: Cell<Transaction>) => (
                     <td {...cell.getCellProps()} key={cell.column.id}>{cell.render('Cell')}</td>
                   ))}
                 </tr>
