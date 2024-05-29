@@ -5,8 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { ConnectButton } from "@mysten/dapp-kit";
 import BankConnection from '../components/BankConnection';
 import Dashboard from '../components/Dashboard';
+import Offers from '../components/Offers';
 import NavBar from '../components/NavBar';
-import { Button } from '@nextui-org/react';
 
 interface Bank {
   name: string;
@@ -66,6 +66,8 @@ export default function Home() {
         return <BankConnection onAuthenticate={handleAuthenticate} />;
       case 'dashboard':
         return <Dashboard />;
+      case 'offers':
+        return <Offers />;
       case 'home':
       default:
         return (

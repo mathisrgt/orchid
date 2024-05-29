@@ -17,6 +17,9 @@ export default function NavBar({ currentComponent, setCurrentComponent }: NavBar
       <Button variant="light" onClick={() => setCurrentComponent('dashboard')}>
         Dashboard
       </Button>
+      <Button variant="light" onClick={() => setCurrentComponent('offers')}>
+        Offers
+      </Button>
     </div>
   );
 }
