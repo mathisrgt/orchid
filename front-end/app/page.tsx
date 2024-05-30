@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
 import { ConnectButton } from "@mysten/dapp-kit";
 import BankConnection from '../components/BankConnection';
 import Dashboard from '../components/Dashboard';
 import Offers from '../components/Offers';
 import NavBar from '../components/NavBar';
+import SearchParamsHandler from '../components/SearchParamsHandler';
 
 interface Bank {
   name: string;
@@ -16,10 +16,15 @@ interface Bank {
 export default function Home() {
   const [currentComponent, setCurrentComponent] = useState<string>('home');
   const [accessToken, setAccessToken] = useState<string>('');
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const code = searchParams.get('code');
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      setAccessToken(token);
+    }
+  }, []);
+
+  const handleAuthenticate = (code: string) => {
     const isAuthenticating = localStorage.getItem('authenticating') === 'true';
     if (code && isAuthenticating) {
       const data = {
@@ -54,16 +59,12 @@ export default function Home() {
           localStorage.setItem('authenticating', 'false');  // Reset authenticating state
         });
     }
-  }, [searchParams]);
-
-  const handleAuthenticate = () => {
-    localStorage.setItem('authenticating', 'true');
   };
 
   const renderComponent = () => {
     switch (currentComponent) {
       case 'bankConnection':
-        return <BankConnection onAuthenticate={handleAuthenticate} />;
+        return <BankConnection onAuthenticate={() => localStorage.setItem('authenticating', 'true')} />;
       case 'dashboard':
         return <Dashboard />;
       case 'offers':
@@ -81,6 +82,9 @@ export default function Home() {
 
   return (
     <main className="bg-gradient-orchid min-h-screen relative pb-16">
+      <Suspense fallback={<div>Loading...</div>}>
+        <SearchParamsHandler onAuth={handleAuthenticate} />
+      </Suspense>
       {renderComponent()}
       <NavBar currentComponent={currentComponent} setCurrentComponent={setCurrentComponent} />
     </main>
