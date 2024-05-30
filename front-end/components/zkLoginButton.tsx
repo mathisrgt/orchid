@@ -33,8 +33,7 @@ import config from "./config.json";
 import { Button } from "@nextui-org/react";
 
 const NETWORK = "devnet";
-const MAX_EPOCH = 2; // keep ephemeral keys active for this many Sui epochs from now (1 epoch ~= 24h)
-
+const MAX_EPOCH = 2;
 const suiClient = new SuiClient({
   url: getFullnodeUrl(NETWORK),
 });
@@ -67,27 +66,24 @@ type AccountData = {
 };
 
 export default function ZkLoginButton() {
-  let accounts = useRef<AccountData[]>([]); // useRef() instead of useState() because of setInterval()
-  const [balances, setBalances] = useState<Map<string, number>>(new Map()); // Map<Sui address, SUI balance>
+  let accounts = useRef<AccountData[]>([]);
+  const [balances, setBalances] = useState<Map<string, number>>(new Map());
   const [modalContent, setModalContent] = useState<string>("");
 
   useEffect(() => {
-    accounts.current = loadAccounts();
-    completeZkLogin(window);
-    fetchBalances(accounts.current);
-    const interval = setInterval(() => fetchBalances(accounts.current), 5_000);
-    return () => {
-      clearInterval(interval);
-    };
+    if (typeof window !== "undefined") {
+      accounts.current = loadAccounts();
+      completeZkLogin();
+      fetchBalances(accounts.current);
+      const interval = setInterval(() => fetchBalances(accounts.current), 5000);
+      return () => {
+        clearInterval(interval);
+      };
+    }
   }, []);
 
-  /* zkLogin end-to-end */
-
-  /**
-   * Start the zkLogin process by getting a JWT token from an OpenID provider.
-   * https://docs.sui.io/concepts/cryptography/zklogin#get-jwt-token
-   */
-  async function beginZkLogin(provider: OpenIdProvider, window: any) {
+  async function beginZkLogin(provider: OpenIdProvider) {
+    if (typeof window === "undefined") return;
     setModalContent(`🔑 Logging in with ${provider}...`);
 
     // Create a nonce
@@ -112,7 +108,7 @@ export default function ZkLoginButton() {
     // Start the OAuth flow with the OpenID provider
     const urlParamsBase = {
       nonce: nonce,
-      redirect_uri: typeof window !== "undefined" ? window.location.origin : "",
+      redirect_uri: window.location.origin,
       response_type: "id_token",
       scope: "openid",
     };
@@ -147,10 +143,9 @@ export default function ZkLoginButton() {
         break;
       }
     }
-    if (typeof window !== "undefined") {
-      window.location.replace(loginUrl);
-    }
+    window.location.replace(loginUrl);
   }
+
 
   /**
    * Complete the zkLogin process.
@@ -158,146 +153,132 @@ export default function ZkLoginButton() {
    * it derives the user address from the JWT and the salt, and finally
    * it gets a zero-knowledge proof from the Mysten Labs proving service.
    */
-  async function completeZkLogin(window: any) {
-    // === Grab and decode the JWT that beginZkLogin() produced ===
-    // https://docs.sui.io/concepts/cryptography/zklogin#decoding-jwt
 
+  async function completeZkLogin() {
+    if (typeof window === "undefined") return;
     // grab the JWT from the URL fragment (the '#...')
-    if (typeof window !== "undefined") {
-      const urlFragment = window.location.hash.substring(1);
-      const urlParams = new URLSearchParams(urlFragment);
-      const jwt = urlParams.get("id_token");
-      if (!jwt) {
-        return;
-      }
-
-      // remove the URL fragment
-
-      window.history.replaceState(null, "", window.location.pathname);
-
-      // decode the JWT
-      const jwtPayload = jwtDecode(jwt);
-      if (!jwtPayload.sub || !jwtPayload.aud) {
-        console.warn("[completeZkLogin] missing jwt.sub or jwt.aud");
-        return;
-      }
-
-      // === Get the salt ===
-      // https://docs.sui.io/concepts/cryptography/zklogin#user-salt-management
-
-      const requestOptions =
-        config.URL_SALT_SERVICE === "/dummy-salt-service.json"
-          ? // dev, using a JSON file (same salt all the time)
-            {
-              method: "GET",
-            }
-          : // prod, using an actual salt server
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ jwt }),
-            };
-
-      const saltResponse: { salt: string } | null = await fetch(
-        config.URL_SALT_SERVICE,
-        requestOptions
-      )
-        .then((res) => {
-          console.debug("[completeZkLogin] salt service success");
-          return res.json();
-        })
-        .catch((error: unknown) => {
-          console.warn("[completeZkLogin] salt service error:", error);
-          return null;
-        });
-
-      if (!saltResponse) {
-        return;
-      }
-
-      const userSalt = BigInt(saltResponse.salt);
-
-      // === Get a Sui address for the user ===
-      // https://docs.sui.io/concepts/cryptography/zklogin#get-the-users-sui-address
-
-      const userAddr = jwtToAddress(jwt, userSalt);
-
-      // === Load and clear the data which beginZkLogin() created before the redirect ===
-      const setupData = loadSetupData();
-      if (!setupData) {
-        console.warn("[completeZkLogin] missing session storage data");
-        return;
-      }
-      clearSetupData();
-      for (const account of accounts.current) {
-        if (userAddr === account.userAddr) {
-          console.warn(
-            `[completeZkLogin] already logged in with this ${setupData.provider} account`
-          );
-          return;
-        }
-      }
-
-      // === Get the zero-knowledge proof ===
-      // https://docs.sui.io/concepts/cryptography/zklogin#get-the-zero-knowledge-proof
-
-      const ephemeralKeyPair = keypairFromSecretKey(
-        setupData.ephemeralPrivateKey
-      );
-      const ephemeralPublicKey = ephemeralKeyPair.getPublicKey();
-      const payload = JSON.stringify(
-        {
-          maxEpoch: setupData.maxEpoch,
-          jwtRandomness: setupData.randomness,
-          extendedEphemeralPublicKey:
-            getExtendedEphemeralPublicKey(ephemeralPublicKey),
-          jwt,
-          salt: userSalt.toString(),
-          keyClaimName: "sub",
-        },
-        null,
-        2
-      );
-
-      console.debug("[completeZkLogin] Requesting ZK proof with:", payload);
-      setModalContent("⏳ Requesting ZK proof. This can take a few seconds...");
-
-      const zkProofs = await fetch(config.URL_ZK_PROVER, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: payload,
-      })
-        .then((res) => {
-          console.debug("[completeZkLogin] ZK proving service success");
-          return res.json();
-        })
-        .catch((error: unknown) => {
-          console.warn("[completeZkLogin] ZK proving service error:", error);
-          return null;
-        })
-        .finally(() => {
-          setModalContent("");
-        });
-
-      if (!zkProofs) {
-        return;
-      }
-
-      // === Save data to session storage so sendTransaction() can use it ===
-      saveAccount({
-        provider: setupData.provider,
-        userAddr,
-        zkProofs,
-        ephemeralPrivateKey: setupData.ephemeralPrivateKey,
-        userSalt: userSalt.toString(),
-        sub: jwtPayload.sub,
-        aud:
-          typeof jwtPayload.aud === "string"
-            ? jwtPayload.aud
-            : jwtPayload.aud[0],
-        maxEpoch: setupData.maxEpoch,
-      });
+    const urlFragment = window.location.hash.substring(1);
+    const urlParams = new URLSearchParams(urlFragment);
+    const jwt = urlParams.get("id_token");
+    if (!jwt) {
+      return;
     }
+
+    // remove the URL fragment
+    window.history.replaceState(null, "", window.location.pathname);
+
+    // decode the JWT
+    const jwtPayload = jwtDecode(jwt);
+    if (!jwtPayload.sub || !jwtPayload.aud) {
+      console.warn("[completeZkLogin] missing jwt.sub or jwt.aud");
+      return;
+    }
+
+    // === Get the salt ===
+    const requestOptions =
+      config.URL_SALT_SERVICE === "/dummy-salt-service.json"
+        ? {
+          method: "GET",
+        }
+        : {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jwt }),
+        };
+
+    const saltResponse: { salt: string } | null = await fetch(
+      config.URL_SALT_SERVICE,
+      requestOptions
+    )
+      .then((res) => {
+        console.debug("[completeZkLogin] salt service success");
+        return res.json();
+      })
+      .catch((error: unknown) => {
+        console.warn("[completeZkLogin] salt service error:", error);
+        return null;
+      });
+
+    if (!saltResponse) {
+      return;
+    }
+
+    const userSalt = BigInt(saltResponse.salt);
+
+    // === Get a Sui address for the user ===
+    const userAddr = jwtToAddress(jwt, userSalt);
+
+    // === Load and clear the data which beginZkLogin() created before the redirect ===
+    const setupData = loadSetupData();
+    if (!setupData) {
+      console.warn("[completeZkLogin] missing session storage data");
+      return;
+    }
+    clearSetupData();
+    for (const account of accounts.current) {
+      if (userAddr === account.userAddr) {
+        console.warn(
+          `[completeZkLogin] already logged in with this ${setupData.provider} account`
+        );
+        return;
+      }
+    }
+
+    // === Get the zero-knowledge proof ===
+    const ephemeralKeyPair = keypairFromSecretKey(
+      setupData.ephemeralPrivateKey
+    );
+    const ephemeralPublicKey = ephemeralKeyPair.getPublicKey();
+    const payload = JSON.stringify(
+      {
+        maxEpoch: setupData.maxEpoch,
+        jwtRandomness: setupData.randomness,
+        extendedEphemeralPublicKey:
+          getExtendedEphemeralPublicKey(ephemeralPublicKey),
+        jwt,
+        salt: userSalt.toString(),
+        keyClaimName: "sub",
+      },
+      null,
+      2
+    );
+
+    console.debug("[completeZkLogin] Requesting ZK proof with:", payload);
+    setModalContent("⏳ Requesting ZK proof. This can take a few seconds...");
+
+    const zkProofs = await fetch(config.URL_ZK_PROVER, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+    })
+      .then((res) => {
+        console.debug("[completeZkLogin] ZK proving service success");
+        return res.json();
+      })
+      .catch((error: unknown) => {
+        console.warn("[completeZkLogin] ZK proving service error:", error);
+        return null;
+      })
+      .finally(() => {
+        setModalContent("");
+      });
+
+    if (!zkProofs) {
+      return;
+    }
+
+    // === Save data to session storage so sendTransaction() can use it ===
+    saveAccount({
+      provider: setupData.provider,
+      userAddr,
+      zkProofs,
+      ephemeralPrivateKey: setupData.ephemeralPrivateKey,
+      userSalt: userSalt.toString(),
+      sub: jwtPayload.sub,
+      aud:
+        typeof jwtPayload.aud === "string" ? jwtPayload.aud : jwtPayload.aud[0],
+      maxEpoch: setupData.maxEpoch,
+    });
   }
 
   /**
@@ -442,23 +423,19 @@ export default function ZkLoginButton() {
   return (
     <div id="page">
       <Modal content={modalContent} />
-
       <div id="network-indicator">
         <label>{NETWORK.toUpperCase()}</label>
       </div>
-
       <div id="login-buttons" className="section">
         <h2>Log in:</h2>
-
         <Button
           onClick={() => {
-            beginZkLogin("Google", window);
+            beginZkLogin("Google");
           }}
         >
           Google
         </Button>
       </div>
-
       {accounts.current.length > 0 && (
         <div id="accounts" className="section">
           <h2>Accounts:</h2>
@@ -524,7 +501,6 @@ export default function ZkLoginButton() {
           })}
         </div>
       )}
-
       <div className="section">
         <Button
           color="danger"

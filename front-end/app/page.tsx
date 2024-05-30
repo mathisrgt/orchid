@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 
+const ZkLoginButton = dynamic(() => import("@/components/zkLoginButton"), { ssr: false });
 import { ConnectButton } from "@mysten/dapp-kit";
-import ZkLoginButton from "@/components/zkLoginButton";
 
 export default function Home() {
   return (
