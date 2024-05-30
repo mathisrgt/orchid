@@ -7,17 +7,17 @@ interface NavBarProps {
 
 export default function NavBar({ currentComponent, setCurrentComponent }: NavBarProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white bg-opacity-40 p-2 flex justify-around">
-      <Button variant="light" onClick={() => setCurrentComponent('home')}>
+    <div className="fixed bottom-0 left-0 right-0 bg-white bg-opacity-40 p-2 flex justify-around rounded-lg">
+      <Button variant="light" className="text-white font-bold" onClick={() => setCurrentComponent('home')}>
         Home
       </Button>
-      <Button variant="light" onClick={() => setCurrentComponent('bankConnection')}>
+      <Button variant="light" className="text-white font-bold" onClick={() => setCurrentComponent('bankConnection')}>
         Bank
       </Button>
-      <Button variant="light" onClick={() => setCurrentComponent('dashboard')}>
+      <Button variant="light" className="text-white font-bold" onClick={() => setCurrentComponent('dashboard')}>
         Dashboard
       </Button>
-      <Button variant="light" onClick={() => setCurrentComponent('offers')}>
+      <Button variant="light" className="text-white font-bold" onClick={() => setCurrentComponent('offers')}>
         Offers
       </Button>
     </div>
