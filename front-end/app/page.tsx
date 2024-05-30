@@ -48,7 +48,7 @@ export default function Home() {
           localStorage.setItem('accessToken', data.access_token);
           setAccessToken(data.access_token);
 
-          const newBank: Bank = { name: 'Boursorama', accessToken: data.access_token };
+          const newBank: Bank = { name: 'Revolut', accessToken: data.access_token };
           const storedBanks = localStorage.getItem('banks');
           const banks = storedBanks ? JSON.parse(storedBanks) : [];
           banks.push(newBank);

@@ -16,6 +16,7 @@ const config: Config = {
       colors: {
         'custom-blue': '#4DA2FF',
         'custom-purple': '#A969E6',
+        'custom-orange': '#FF9B93',
       },
     },
   },
