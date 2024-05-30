@@ -117,7 +117,7 @@ export default function Dashboard() {
           <thead>
             {headerGroups.map((headerGroup: HeaderGroup<Transaction>) => (
               <tr {...headerGroup.getHeaderGroupProps()} key={headerGroup.id}>
-                {headerGroup.headers.map((column: Column<Transaction>) => (
+                {headerGroup.headers.map((column: any) => (
                   <th {...column.getHeaderProps()} key={column.id}>{column.render('Header')}</th>
                 ))}
               </tr>
