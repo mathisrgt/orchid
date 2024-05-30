@@ -7,6 +7,8 @@ import Dashboard from '../components/Dashboard';
 import Offers from '../components/Offers';
 import NavBar from '../components/NavBar';
 import SearchParamsHandler from '../components/SearchParamsHandler';
+import Image from 'next/image';
+import logo from '../public/logo_no.png';
 
 interface Bank {
   name: string;
@@ -72,8 +74,16 @@ export default function Home() {
       case 'home':
       default:
         return (
-          <div className="flex min-h-screen flex-col items-center justify-between p-24">
-            <p className="text-white text-lg font-bold">Welcome to Orchid</p>
+          <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
+            <Image src={logo} alt="Orchid Logo" width={200} height={200} className="mb-4" />
+            <p className="text-white text-3xl font-bold mb-4">Welcome to Orchid</p>
+            <p className="text-white text-lg mb-8">
+              Orchid is a physical-free, interoperable loyalty program designed to keep you engaged and rewarded.
+            </p>
+            <div className="flex items-center space-x-2 mb-28">
+              <Image src="/logo_sui.png" alt="Sui Logo" width={18} height={18} />
+              <p className="text-custom-blue text-sm font-semibold">Powered by Sui</p>
+            </div>
             <ConnectButton />
           </div>
         );
