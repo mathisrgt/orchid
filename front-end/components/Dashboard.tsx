@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTable, Column, TableInstance, HeaderGroup, Cell, Row } from 'react-table';
-import { Button, Card } from '@nextui-org/react';
+import { Button, Card, Spacer } from '@nextui-org/react';
+import Image from 'next/image';
+import logo from '../public/logo_no.png';
 
 interface Transaction {
   id: number;
@@ -104,21 +106,24 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-orchid">
-      <Card className="w-full max-w-sm p-4 bg-white bg-opacity-80 mb-6">
-        <div className="flex justify-between items-center">
-          <p className="text-lg font-bold">Points</p>
-          <Button variant="light" onClick={claimPoints}>Claim Points</Button>
+      <Image src={logo} alt="Orchid Logo" width={100} height={100} className="mb-2" />
+      <Card className="w-full max-w-sm p-6 bg-white bg-opacity-30 shadow-md backdrop-blur-md rounded-2xl mb-4">
+        <h2 className="text-center mb-4 text-lg font-bold text-white">Your Points</h2>
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-lg font-bold text-white">Points: {points}</p>
+          <Button className="bg-custom-orange px-5 text-white shadow-lg rounded-lg" onClick={claimPoints}>
+            Claim Points
+          </Button>
         </div>
-        <p>Total Points: {points}</p>
       </Card>
-      <Card className="w-full max-w-sm p-4 bg-white bg-opacity-80">
-        <p className="text-lg font-bold mb-4">Transactions</p>
-        <table {...getTableProps()} className="table-auto w-full">
+      <Card className="w-full max-w-sm p-1 bg-white bg-opacity-30 shadow-md backdrop-blur-md rounded-2xl">
+        <h2 className="text-center mb-4 text-lg font-bold text-white">Transactions</h2>
+        <table {...getTableProps()} className="table-auto w-full text-white">
           <thead>
             {headerGroups.map((headerGroup: HeaderGroup<Transaction>) => (
               <tr {...headerGroup.getHeaderGroupProps()} key={headerGroup.id}>
                 {headerGroup.headers.map((column: any) => (
-                  <th {...column.getHeaderProps()} key={column.id}>{column.render('Header')}</th>
+                  <th {...column.getHeaderProps()} key={column.id} className="text-center px-5">{column.render('Header')}</th>
                 ))}
               </tr>
             ))}
@@ -129,7 +134,7 @@ export default function Dashboard() {
               return (
                 <tr {...row.getRowProps()} key={row.id}>
                   {row.cells.map((cell: Cell<Transaction>) => (
-                    <td {...cell.getCellProps()} key={cell.column.id}>{cell.render('Cell')}</td>
+                    <td {...cell.getCellProps()} key={cell.column.id} className="text-center p-2">{cell.render('Cell')}</td>
                   ))}
                 </tr>
               );

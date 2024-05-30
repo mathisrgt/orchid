@@ -31,7 +31,7 @@ export default function BankConnection({ onAuthenticate }: { onAuthenticate: () 
       <p className="text-center text-white mb-8">Connect your bank to see how much you can earn !</p>
       <Card className="w-full max-w-sm p-6 bg-white bg-opacity-30 shadow-md backdrop-blur-md rounded-2xl">
         <h2 className="text-center mb-4 text-lg font-bold text-white">Bank Connection</h2>
-        <Button radius="full" className="mb-4 bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg" onClick={addBankAccount}>
+        <Button radius="full" className="mb-4 bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg rounded-xl" onClick={addBankAccount}>
           Add Account
         </Button>
         <Spacer y={1} />
