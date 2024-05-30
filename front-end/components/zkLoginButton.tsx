@@ -146,7 +146,6 @@ export default function ZkLoginButton() {
     window.location.replace(loginUrl);
   }
 
-
   /**
    * Complete the zkLogin process.
    * It sends the JWT to the salt server to get a salt, then
@@ -176,15 +175,15 @@ export default function ZkLoginButton() {
 
     // === Get the salt ===
     const requestOptions =
-      config.URL_SALT_SERVICE === "/dummy-salt-service.json"
+      config.URL_SALT_SERVICE === "api/saltService"
         ? {
-          method: "GET",
-        }
+            method: "GET",
+          }
         : {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ jwt }),
-        };
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jwt }),
+          };
 
     const saltResponse: { salt: string } | null = await fetch(
       config.URL_SALT_SERVICE,
