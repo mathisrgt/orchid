@@ -72,18 +72,13 @@ export default function ZkLoginButton() {
   const [modalContent, setModalContent] = useState<string>("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      accounts.current = loadAccounts();
-      completeZkLogin();
-      fetchBalances(accounts.current);
-      const interval = setInterval(
-        () => fetchBalances(accounts.current),
-        5_000
-      );
-      return () => {
-        clearInterval(interval);
-      };
-    }
+    accounts.current = loadAccounts();
+    completeZkLogin(window);
+    fetchBalances(accounts.current);
+    const interval = setInterval(() => fetchBalances(accounts.current), 5_000);
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   /* zkLogin end-to-end */
@@ -92,7 +87,7 @@ export default function ZkLoginButton() {
    * Start the zkLogin process by getting a JWT token from an OpenID provider.
    * https://docs.sui.io/concepts/cryptography/zklogin#get-jwt-token
    */
-  async function beginZkLogin(provider: OpenIdProvider) {
+  async function beginZkLogin(provider: OpenIdProvider, window: any) {
     setModalContent(`🔑 Logging in with ${provider}...`);
 
     // Create a nonce
@@ -163,7 +158,7 @@ export default function ZkLoginButton() {
    * it derives the user address from the JWT and the salt, and finally
    * it gets a zero-knowledge proof from the Mysten Labs proving service.
    */
-  async function completeZkLogin() {
+  async function completeZkLogin(window: any) {
     // === Grab and decode the JWT that beginZkLogin() produced ===
     // https://docs.sui.io/concepts/cryptography/zklogin#decoding-jwt
 
@@ -457,7 +452,7 @@ export default function ZkLoginButton() {
 
         <Button
           onClick={() => {
-            beginZkLogin("Google");
+            beginZkLogin("Google", window);
           }}
         >
           Google
