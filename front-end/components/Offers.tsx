@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Button, Card } from '@nextui-org/react';
+import { Button, Card, CardBody, CardFooter, Image } from '@nextui-org/react';
 
 interface Product {
   id: number;
   name: string;
   description: string;
   cost: number; // The cost in points
+  img: string;  // Image URL for the product
 }
 
 const sampleProducts: Product[] = [
-  { id: 1, name: "Product 1", description: "Description of Product 1", cost: 50 },
-  { id: 2, name: "Product 2", description: "Description of Product 2", cost: 100 },
-  { id: 3, name: "Product 3", description: "Description of Product 3", cost: 150 },
+  { id: 1, name: "Orange", description: "Description of Product 1", cost: 50, img: "/orange.png" },
+  { id: 2, name: "Ipad", description: "Description of Product 2", cost: 10000, img: "/ipad.png" },
+  { id: 3, name: "Yogurt", description: "Description of Product 3", cost: 150, img: "/Yaourt.png" },
 ];
 
 export default function Offers() {
@@ -30,24 +31,39 @@ export default function Offers() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-orchid">
-      <Card className="w-full max-w-md p-4 bg-white bg-opacity-80 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-lg font-bold">Available Offers</p>
-          <p className="text-lg font-bold">Balance: {balance} points</p>
+      <Image src="/logo_no.png" alt="Orchid Logo" width={100} height={100} className="mb-2" />
+      <p className="text-center text-white mb-8">Browse our exclusive offers and claim your rewards!</p>
+      <Card className="w-full max-w-md p-3 bg-white bg-opacity-30 shadow-md backdrop-blur-md rounded-2xl mb-6">
+        <div className="flex justify-between items-center">
+          <p className="text-lg font-bold text-white">Available Offers</p>
+          <p className="text-lg font-bold text-white">Balance: {balance} points</p>
         </div>
-        {sampleProducts.map(product => (
-          <Card key={product.id} className="w-full mb-4">
-            <div className="p-4">
-              <p className="text-lg font-bold">{product.name}</p>
-              <p className="text-sm">{product.description}</p>
-              <p className="text-sm font-bold">Cost: {product.cost} points</p>
-              <Button variant="light" onClick={() => claimProduct(product)} disabled={balance < product.cost}>
-                Claim
-              </Button>
-            </div>
-          </Card>
-        ))}
       </Card>
+      <div className="flex flex-col gap-4">
+        {sampleProducts.map((product) => (
+          <Card
+            key={product.id}
+            shadow="sm"
+            isPressable
+            onPress={() => claimProduct(product)}
+            className="w-full mb-4 px-10 bg-white bg-opacity-20 backdrop-blur-md rounded-2xl"
+          >
+            <CardBody className="overflow-visible p-0">
+              <Image
+                shadow="sm"
+                width="100%"
+                alt={product.name}
+                className="object-cover h-[140px] rounded-t-2xl"
+                src={product.img}
+              />
+            </CardBody>
+            <CardFooter className="text-small flex justify-between items-center">
+                <b>{product.name}</b>
+                <p className="text-default-500">{product.cost} points</p>
+              </CardFooter>
+            </Card>
+        ))}
+      </div>
     </div>
   );
 }
