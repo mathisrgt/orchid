@@ -479,8 +479,8 @@ export default function ZkLoginButton() {
                   Send transaction
                 </button>
                 {balance === 0 && (
-                  <button
-                    className="btn-faucet"
+                  <Button
+                    color="default"
                     onClick={() => {
                       requestSuiFromFaucet(NETWORK, acct.userAddr);
                       setModalContent(
@@ -492,7 +492,7 @@ export default function ZkLoginButton() {
                     }}
                   >
                     Use faucet
-                  </button>
+                  </Button>
                 )}
                 <hr />
               </div>
@@ -500,16 +500,6 @@ export default function ZkLoginButton() {
           })}
         </div>
       )}
-      <div className="section">
-        <Button
-          color="danger"
-          onClick={() => {
-            clearState();
-          }}
-        >
-          🧨 CLEAR STATE
-        </Button>
-      </div>
     </div>
   );
 }
