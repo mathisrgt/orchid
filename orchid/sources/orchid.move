@@ -57,7 +57,7 @@ module orchid::orchid {
         return false
     }
 
-    public fun claim(
+    public entry fun claim(
         cap: &mut TreasuryCap<ORCHID>,
         registry: &mut TransactionRegistry,
         timestamp: String, 
@@ -83,7 +83,7 @@ module orchid::orchid {
         token::confirm_with_treasury_cap(cap, req, ctx);
     }
 
-    public fun burn(
+    public entry fun burn(
         cap: &mut TreasuryCap<ORCHID>,
         amount: sui::token::Token<orchid::orchid::ORCHID>,
     ) {
