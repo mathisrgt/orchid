@@ -1,0 +1,469 @@
+// "use client";
+
+// import { Button } from "@nextui-org/react";
+
+// import "fast-text-encoding";
+// import "react-native-url-polyfill/auto";
+// import "./sui/env";
+// import React, { useState, useCallback, useMemo, useEffect } from "react";
+// import { Alert } from "react-native";
+
+// import {
+//   doLogin,
+//   prepareLogin,
+//   getSaltFromMystenAPI,
+//   getZNPFromMystenAPI,
+//   // UserKeyData,
+//   // LoginResponse,
+//   executeTransactionWithZKP,
+//   getZNPFromEnoki,
+//   getSaltFromEnoki,
+// } from "../sui/zkLogin";
+
+// import { useSui } from "../sui/hooks/useSui";
+
+// import { jwtDecode } from "jwt-decode";
+
+// import {
+//   generateNonce,
+//   generateRandomness,
+//   genAddressSeed,
+//   getZkLoginSignature,
+//   jwtToAddress,
+// } from "@mysten/zklogin";
+
+// import { UserKeyData } from "@/sui/types/UsefulTypes";
+
+// export default function ZkLoginButton() {
+//   const { suiClient } = useSui();
+
+//   const configs = {
+//     auth0: {
+//       issuer: "https://accounts.google.com",
+//       clientId:
+//         "70599191792-e7cuqm6pldc8ffp3hg9ie84n4d8u0stm.apps.googleusercontent.com",
+//       redirectUrl:
+//         "com.googleusercontent.apps.70599191792-e7cuqm6pldc8ffp3hg9ie84n4d8u0stm:/oauth2redirect/google",
+//       scopes: ["openid"],
+//       response_type: "id_token",
+//     },
+//     auth1: {
+//       issuer: "https://accounts.google.com",
+//       clientId:
+//         "595966210064-3nnnqvmaelqnqsmq448kv05po362smt2.apps.googleusercontent.com",
+//       redirectUrl:
+//         "https://poc-zklogin.vercel.app/proxy?redirect_uri=com.googleusercontent.apps.70599191792-e7cuqm6pldc8ffp3hg9ie84n4d8u0stm:/oauth2redirect/google",
+//       scopes: ["openid"],
+//       response_type: "id_token",
+//     },
+//   };
+
+//   const handleAuthorize2 = useCallback(async (provider: string | number) => {
+//     try {
+//       const suiConst = await prepareLogin(suiClient);
+//       const [suiVars, setSuiVars] = useState<UserKeyData>();
+
+//       setSuiVars(suiConst);
+//       const configuration = {
+//         warmAndPrefetchChrome: true,
+//         connectionTimeoutSeconds: 5,
+//         ...configs.auth0,
+//       };
+
+//       prefetchConfiguration(configuration);
+
+//       // const registerConfig = {
+//       //   additionalParameters: {
+//       //     nonce: suiConst.nonce,
+//       //   },
+//       // };
+//       // const registerResult = await register(registerConfig);
+
+//       const config = {
+//         ...configs[provider],
+//         useNonce: false,
+//         additionalParameters: {
+//           nonce: suiConst.nonce,
+//         },
+//         connectionTimeoutSeconds: 5,
+//         iosPrefersEphemeralSession: true,
+//         prefersEphemeralWebBrowserSession: true,
+//       };
+
+//       const newAuthState = await authorize(config);
+
+//       setAuthState({
+//         hasLoggedInOnce: true,
+//         provider: provider,
+//         ...newAuthState,
+//       });
+
+//       console.log("Google auth jwt :", newAuthState.idToken);
+//       console.log("From SUI const :", suiConst);
+
+//       const decodedJwt = jwtDecode(newAuthState.idToken);
+//       console.log("Google auth response.nonce :", decodedJwt.nonce);
+
+//       if (decodedJwt.nonce !== suiConst.nonce) {
+//         Alert.alert(
+//           "Missatching Google nonce! Your auth try was probably spoofed"
+//         );
+//         return;
+//       }
+
+//       console.log("Google JWT response:", newAuthState.idToken);
+
+//       // zkLogin Flow
+//       const salt = await getSaltFromEnoki(
+//         newAuthState.idToken,
+//         "enoki_public_f6b7839091c33ad369a7ee83a00cabf8" //enoki_apikey_3662ad8b95e837bc26cf41dee4900d37
+//       );
+//       // setSuiVars(...suiVars, salt);
+//       console.log("Salt from enoki:", salt);
+
+//       const zkp = await getZNPFromEnoki(
+//         newAuthState.idToken,
+//         suiConst,
+//         "enoki_public_f6b7839091c33ad369a7ee83a00cabf8" //enoki_apikey_3662ad8b95e837bc26cf41dee4900d37
+//       );
+//       // setSuiVars(...suiVars, zkp);
+//       // const address = jwtToAddress(newAuthState.idToken, BigInt(salt));
+//       console.log("ZKP from enoki:", zkp, "my Address:", salt.address);
+
+//       // Execute sample transaction
+//       const transactionData = executeTransactionWithZKP(
+//         newAuthState.idToken,
+//         zkp,
+//         suiConst,
+//         salt.salt,
+//         suiClient
+//       );
+//       console.log("Transaction finished:", transactionData);
+//     } catch (error) {
+//       Alert.alert("Failed to log in", error.message);
+//       console.log("log in Error:", error);
+//     }
+//   }, []);
+
+//   return (
+//     <Button
+//       color="primary"
+//       onClick={() => {
+//         handleAuthorize2("auth0");
+//       }}
+//     >
+//       ZkLogin
+//     </Button>
+//   );
+// }
+
+// Chatgpt
+// "use client";
+
+// import { useEffect, useState, useCallback, useMemo } from "react";
+// import { jwtDecode } from "jwt-decode";
+// import { signIn, signOut, useSession } from "next-auth/react";
+// import {
+//   Button,
+//   Spacer,
+//   Card,
+//   CardBody,
+//   TableRow,
+//   TableColumn,
+// } from "@nextui-org/react";
+// import {
+//   doLogin,
+//   prepareLogin,
+//   getSaltFromMystenAPI,
+//   getZNPFromMystenAPI,
+//   executeTransactionWithZKP,
+//   getZNPFromEnoki,
+//   getSaltFromEnoki,
+// } from "../sui/zkLogin"; // Adjust the import path
+// import { useSui } from "../sui/hooks/useSui"; // Adjust the import path
+// import {
+//   generateNonce,
+//   generateRandomness,
+//   genAddressSeed,
+//   getZkLoginSignature,
+//   jwtToAddress,
+// } from "@mysten/zklogin";
+
+// interface AuthState {
+//   hasLoggedInOnce: boolean;
+//   provider: AuthProvider | "";
+//   accessToken: string;
+//   accessTokenExpirationDate: string;
+//   refreshToken: string;
+// }
+
+// type AuthProvider = "auth0" | "auth1";
+
+// interface AuthConfig {
+//   issuer: string;
+//   clientId: string;
+//   redirectUrl: string;
+//   scopes: string[];
+//   response_type: string;
+// }
+
+// const configs: Record<AuthProvider, AuthConfig> = {
+//   auth0: {
+//     issuer: "https://accounts.google.com",
+//     clientId:
+//       "70599191792-e7cuqm6pldc8ffp3hg9ie84n4d8u0stm.apps.googleusercontent.com",
+//     redirectUrl:
+//       "com.googleusercontent.apps.70599191792-e7cuqm6pldc8ffp3hg9ie84n4d8u0stm:/oauth2redirect/google",
+//     scopes: ["openid"],
+//     response_type: "id_token",
+//   },
+//   auth1: {
+//     issuer: "https://accounts.google.com",
+//     clientId:
+//       "595966210064-3nnnqvmaelqnqsmq448kv05po362smt2.apps.googleusercontent.com",
+//     redirectUrl:
+//       "https://poc-zklogin.vercel.app/proxy?redirect_uri=com.googleusercontent.apps.70599191792-e7cuqm6pldc8ffp3hg9ie84n4d8u0stm:/oauth2redirect/google",
+//     scopes: ["openid"],
+//     response_type: "id_token",
+//   },
+// };
+
+// const defaultAuthState: AuthState = {
+//   hasLoggedInOnce: false,
+//   provider: "",
+//   accessToken: "",
+//   accessTokenExpirationDate: "",
+//   refreshToken: "",
+// };
+
+// // Extend the session type to include custom properties
+// declare module "next-auth" {
+//   interface Session {
+//     accessToken?: string;
+//     refreshToken?: string;
+//     expires?: string;
+//   }
+// }
+
+// const ZkLoginButton: React.FC = () => {
+//   const [authState, setAuthState] = useState<AuthState>(defaultAuthState);
+//   const { suiClient } = useSui();
+//   const [suiVars, setSuiVars] = useState<any>();
+//   const { data: session } = useSession();
+
+//   const handleAuthorize = useCallback(
+//     async (provider: AuthProvider) => {
+//       try {
+//         const suiConst = await prepareLogin(suiClient);
+//         setSuiVars(suiConst);
+
+//         const result = await signIn(provider, {
+//           redirect: false,
+//           callbackUrl: configs[provider].redirectUrl,
+//         });
+
+//         if (!result || !result.url || !session?.accessToken) {
+//           throw new Error("Authorization failed");
+//         }
+
+//         const newAuthState = {
+//           ...authState,
+//           hasLoggedInOnce: true,
+//           provider,
+//           accessToken: session.accessToken as string,
+//           accessTokenExpirationDate: session.expires as string,
+//           refreshToken: session.refreshToken as string,
+//         };
+//         setAuthState(newAuthState);
+
+//         const decodedJwt: any = jwtDecode(newAuthState.accessToken);
+//         if (decodedJwt.nonce !== suiConst.nonce) {
+//           alert("Mismatched Google nonce! Your auth try was probably spoofed");
+//           return;
+//         }
+
+//         const salt = await getSaltFromMystenAPI(newAuthState.accessToken);
+//         const zkp = await getZNPFromMystenAPI(
+//           newAuthState.accessToken,
+//           salt,
+//           suiConst
+//         );
+//         const address = jwtToAddress(newAuthState.accessToken, BigInt(salt));
+
+//         const transactionData = await executeTransactionWithZKP(
+//           newAuthState.accessToken,
+//           zkp,
+//           suiConst,
+//           salt,
+//           suiClient
+//         );
+//       } catch (error: any) {
+//         alert("Failed to log in: " + error.message);
+//       }
+//     },
+//     [suiClient, authState, session]
+//   );
+
+//   const handleAuthorize2 = useCallback(
+//     async (provider: AuthProvider) => {
+//       try {
+//         const suiConst = await prepareLogin(suiClient);
+//         setSuiVars(suiConst);
+
+//         const result = await signIn(provider, {
+//           redirect: false,
+//           callbackUrl: configs[provider].redirectUrl,
+//         });
+
+//         if (!result || !result.url || !session?.accessToken) {
+//           throw new Error("Authorization failed");
+//         }
+
+//         const newAuthState = {
+//           ...authState,
+//           hasLoggedInOnce: true,
+//           provider,
+//           accessToken: session.accessToken as string,
+//           accessTokenExpirationDate: session.expires as string,
+//           refreshToken: session.refreshToken as string,
+//         };
+//         setAuthState(newAuthState);
+
+//         const decodedJwt: any = jwtDecode(newAuthState.accessToken);
+//         if (decodedJwt.nonce !== suiConst.nonce) {
+//           alert("Mismatched Google nonce! Your auth try was probably spoofed");
+//           return;
+//         }
+
+//         const salt = await getSaltFromEnoki(
+//           newAuthState.accessToken,
+//           "enoki_public_f6b7839091c33ad369a7ee83a00cabf8"
+//         );
+//         const zkp = await getZNPFromEnoki(
+//           newAuthState.accessToken,
+//           suiConst,
+//           "enoki_public_f6b7839091c33ad369a7ee83a00cabf8"
+//         );
+
+//         const transactionData = await executeTransactionWithZKP(
+//           newAuthState.accessToken,
+//           zkp,
+//           suiConst,
+//           salt.salt,
+//           suiClient
+//         );
+//       } catch (error: any) {
+//         alert("Failed to log in: " + error.message);
+//       }
+//     },
+//     [suiClient, authState, session]
+//   );
+
+//   const handleRefresh = useCallback(
+//     async (provider: AuthProvider) => {
+//       try {
+//         const suiConst = await prepareLogin(suiClient);
+//         setSuiVars(suiConst);
+
+//         const result = await signIn(provider, {
+//           redirect: false,
+//           callbackUrl: configs[provider].redirectUrl,
+//         });
+
+//         if (!result || !result.url || !session?.accessToken) {
+//           throw new Error("Refresh failed");
+//         }
+
+//         const newAuthState = {
+//           ...authState,
+//           hasLoggedInOnce: true,
+//           provider,
+//           accessToken: session.accessToken as string,
+//           accessTokenExpirationDate: session.expires as string,
+//           refreshToken: session.refreshToken as string,
+//         };
+//         setAuthState(newAuthState);
+
+//         const decodedJwt: any = jwtDecode(newAuthState.accessToken);
+//         if (decodedJwt.nonce !== suiConst.nonce) {
+//           alert("Mismatched Google nonce! Your auth try was probably spoofed");
+//           return;
+//         }
+//       } catch (error: any) {
+//         alert("Failed to refresh token: " + error.message);
+//       }
+//     },
+//     [authState, suiClient, session]
+//   );
+
+//   const handleRevoke = useCallback(async () => {
+//     try {
+//       await signOut({ redirect: false });
+
+//       setAuthState(defaultAuthState);
+//     } catch (error: any) {
+//       alert("Failed to revoke token: " + error.message);
+//     }
+//   }, []);
+
+//   const showRevoke = useMemo(() => {
+//     return !!authState.accessToken;
+//   }, [authState]);
+
+//   return (
+//     <Card>
+//       <CardBody>
+//         {authState.accessToken ? (
+//           <TableColumn>
+//             <p>accessToken: {authState.accessToken}</p>
+//             <p>
+//               accessTokenExpirationDate: {authState.accessTokenExpirationDate}
+//             </p>
+//             <p>refreshToken: {authState.refreshToken}</p>
+//           </TableColumn>
+//         ) : (
+//           <h1>{authState.hasLoggedInOnce ? "Goodbye." : "Hello, stranger."}</h1>
+//         )}
+
+//         <Spacer y={1} />
+
+//         <TableRow>
+//           <>
+//             {!authState.accessToken ? (
+//               <>
+//                 <Button
+//                   onClick={() => handleAuthorize2("auth0")}
+//                   color="danger"
+//                 >
+//                   zkLogin with Enoki
+//                 </Button>
+//                 <Spacer x={0.5} />
+//                 <Button onClick={() => handleAuthorize("auth0")} color="danger">
+//                   zkLogin deprecated flow
+//                 </Button>
+//               </>
+//             ) : null}
+//             {authState.refreshToken ? (
+//               <>
+//                 <Spacer x={0.5} />
+//                 <Button onClick={() => handleRefresh("auth0")} color="primary">
+//                   Refresh
+//                 </Button>
+//               </>
+//             ) : null}
+//             {showRevoke ? (
+//               <>
+//                 <Spacer x={0.5} />
+//                 <Button onClick={handleRevoke} color="danger">
+//                   Revoke
+//                 </Button>
+//               </>
+//             ) : null}
+//           </>
+//         </TableRow>
+//       </CardBody>
+//     </Card>
+//   );
+// };
+
+// export default ZkLoginButton;

@@ -1,6 +1,11 @@
 "use client";
 
+
 import { useState, useEffect, Suspense } from 'react';
+
+import dynamic from "next/dynamic";
+const ZkLoginButton = dynamic(() => import("@/components/zkLoginButton"), { ssr: false });
+
 import { ConnectButton } from "@mysten/dapp-kit";
 import BankConnection from '../components/BankConnection';
 import Dashboard from '../components/Dashboard';
