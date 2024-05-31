@@ -1,19 +1,10 @@
 module orchid::orchid {
-    use std::option;
-    use sui::transfer;
-    use sui::object::{Self, UID};
     use sui::coin::{Self, TreasuryCap};
-    use sui::tx_context::{Self, TxContext};
-
-    use sui::token::{Self, ActionRequest, Token};
-
-    use std::address;
+    use sui::token::{Self};
     use std::string::String;
-    use std::vector;
 
     const EClaimedTransaction: u64 = 0;
 
-    /// The OTW for the Token / Coin.
     public struct ORCHID has drop {}
 
     public struct Transaction has key, store {
@@ -31,11 +22,11 @@ module orchid::orchid {
     fun init(otw: ORCHID, ctx: &mut TxContext) {
         let (treasury_cap, coin_metadata) = coin::create_currency(
             otw,
-            0, // no decimals
-            b"ORD", // symbol
-            b"Orchid Token", // name
-            b"Token for Loyalty", // description
-            option::none(), // url
+            0,
+            b"ORD",
+            b"Orchid Token",
+            b"Token for Loyalty",
+            option::none(),
             ctx
         );
 
