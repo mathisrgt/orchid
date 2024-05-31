@@ -31,13 +31,34 @@ export default function Dashboard() {
     }
   }, []);
 
-  const calculatePoints = (validTransactions: Transaction[]) => {
+  const calculatePoints = async (validTransactions: Transaction[]) => {
     const totalSpent = validTransactions.reduce((sum, transaction) => sum + Math.abs(transaction.value), 0);
     const roundedPoints = Math.round(totalSpent);
     setPoints(roundedPoints);
-    // %%%%%%%%% MINT TOKENS %%%%%%%%%
-    // Add logic to call the blockchain to mint tokens here
-    // ...
+
+    // Envoyer une requête POST au backend pour minter les tokens
+    await mintTokens(roundedPoints);
+  };
+
+  const mintTokens = async (points: number) => {
+    try {
+      const response = await fetch('/api/mintTokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ points }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Tokens minted successfully:', data);
+      } else {
+        console.error('Failed to mint tokens');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const claimPoints = () => {
