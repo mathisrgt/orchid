@@ -18,15 +18,31 @@ const sampleProducts: Product[] = [
 export default function Offers() {
   const [balance, setBalance] = useState<number>(0);
 
-  const claimProduct = (product: Product) => {
-    // Commentaire: Vérifier la balance sur la blockchain
-    // if (balance >= product.cost) {
-    //   // Logic to claim the product
-    //   console.log(`Claimed: ${product.name}`);
-    // } else {
-    //   console.log(`Not enough points to claim: ${product.name}`);
-    // }
-    console.log(`Claim product: ${product.name}`);
+  const claimProduct = async (product: Product) => {
+    // Envoyer une requête POST pour réclamer le produit
+    await claimProductOnBackend(product.id, product.cost);
+    console.log(`Claimed: ${product.name}`);
+  };
+
+  const claimProductOnBackend = async (productId: number, cost: number) => {
+    try {
+      const response = await fetch('/api/claimProduct', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId, cost }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Product claimed successfully:', data);
+      } else {
+        console.error('Failed to claim product');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   return (
