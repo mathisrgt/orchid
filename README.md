@@ -1,4 +1,4 @@
-# Orchid
+# Orchid (Student Project - Sui Hackathon)
 
 ## Overview 🌟
 
@@ -64,5 +64,8 @@ Loyalty points from one brand can be spent at another, with possible rebates, en
 ### Mint Now, Use Later
 
 Users can mint tokens for brands not yet in the ecosystem, ensuring they are ready to leverage new partnerships as they arise.
+
+## Pitch Deck
+[Pitch_deck_orchid](https://docs.google.com/presentation/d/14Bmpp5gLa99feMDMmknBxI3PaRGIUzEMpI76uDhcusE/edit#slide=id.g2c5f6187460_1_18)
 
 
