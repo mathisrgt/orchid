@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Card, CardBody, CardFooter, Image } from '@nextui-org/react';
+import { useCurrentAccount, useSuiClientQuery } from '@mysten/dapp-kit';
 
 interface Product {
   id: number;
@@ -16,7 +17,31 @@ const sampleProducts: Product[] = [
 ];
 
 export default function Offers() {
-  const [balance, setBalance] = useState<number>(0);
+  const account = useCurrentAccount();
+  let content;
+  
+  const formatBalance = (balance: number) => {
+    return new Intl.NumberFormat().format(balance);
+  };
+
+  if (account !== null && account !== undefined) {
+    const { data, isPending, isError, error, refetch } = useSuiClientQuery(
+      'getAllBalances',
+      { owner: account.address },
+    );
+
+    if (isPending) {
+      content = <div>Loading...</div>;
+    } else if (isError) {
+      content = <div>Error: {error.message}</div>;
+    } else {
+      const totalBalanceStr = data.length > 0 ? data[0].totalBalance : "0"; // I PUT [0] DEPEND ON THE TOKEN !!! THE BEST IS TO SELECT THE TOKEN NAME
+      const totalBalance = parseInt(totalBalanceStr, 10) / 10**9;
+      content = formatBalance(totalBalance);
+    }
+  } else {
+    content = <div>Not connected</div>;
+  }
 
   const claimProduct = async (product: Product) => {
     // Envoyer une requête POST pour réclamer le produit
@@ -49,10 +74,15 @@ export default function Offers() {
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-orchid">
       <Image src="/logo_no.png" alt="Orchid Logo" width={100} height={100} className="mb-2" />
       <p className="text-center text-white mb-8">Browse our exclusive offers and claim your rewards!</p>
+      {/* {account ? (
+        <div>Connected to {account.address}</div>
+      ) : (
+        <div>Not connected</div>
+      )} */}
       <Card className="w-full max-w-md p-3 bg-white bg-opacity-30 shadow-md backdrop-blur-md rounded-2xl mb-6">
         <div className="flex justify-between items-center">
           <p className="text-lg font-bold text-white">Available Offers</p>
-          <p className="text-lg font-bold text-white">Balance: {balance} points</p>
+          <p className="text-lg font-bold text-white">Balance: {content} points</p>
         </div>
       </Card>
       <div className="flex flex-col gap-4">
@@ -74,10 +104,10 @@ export default function Offers() {
               />
             </CardBody>
             <CardFooter className="text-small flex justify-between items-center">
-                <b>{product.name}</b>
-                <p className="text-default-500">{product.cost} points</p>
-              </CardFooter>
-            </Card>
+              <b>{product.name}</b>
+              <p className="text-default-500">{product.cost} points</p>
+            </CardFooter>
+          </Card>
         ))}
       </div>
     </div>

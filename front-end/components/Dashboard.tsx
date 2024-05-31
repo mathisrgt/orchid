@@ -3,6 +3,7 @@ import { useTable, Column, TableInstance, HeaderGroup, Cell, Row } from 'react-t
 import { Button, Card, Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import logo from '../public/logo_no.png';
+import { useCurrentAccount, useSuiClientQuery } from '@mysten/dapp-kit';
 
 interface Transaction {
   id: number;
@@ -16,6 +17,34 @@ export default function Dashboard() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [points, setPoints] = useState<number>(0);
+
+  // Get BALANCE
+  const account = useCurrentAccount();
+  let content;
+  
+  const formatBalance = (balance: number) => {
+    return new Intl.NumberFormat().format(balance);
+  };
+
+  if (account !== null && account !== undefined) {
+    const { data, isPending, isError, error, refetch } = useSuiClientQuery(
+      'getAllBalances',
+      { owner: account.address },
+    );
+
+    if (isPending) {
+      content = <div>Loading...</div>;
+    } else if (isError) {
+      content = <div>Error: {error.message}</div>;
+    } else {
+      const totalBalanceStr = data.length > 0 ? data[0].totalBalance : "0"; // I PUT [0] DEPEND ON THE TOKEN !!! THE BEST IS TO SELECT THE TOKEN NAME
+      const totalBalance = parseInt(totalBalanceStr, 10) / 10**9;
+      content = formatBalance(totalBalance);
+    }
+  } else {
+    content = <div>Not connected</div>;
+  }
+  /////////
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -49,7 +78,7 @@ export default function Dashboard() {
         },
         body: JSON.stringify({ points }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Tokens minted successfully:', data);
@@ -131,7 +160,7 @@ export default function Dashboard() {
       <Card className="w-full max-w-sm p-6 bg-white bg-opacity-30 shadow-md backdrop-blur-md rounded-2xl mb-4">
         <h2 className="text-center mb-4 text-lg font-bold text-white">Your Points</h2>
         <div className="flex justify-between items-center mb-4">
-          <p className="text-lg font-bold text-white">Points: {points}</p>
+          <p className="text-lg font-bold text-white">Points: {content}</p> 
           <Button className="bg-custom-orange px-5 text-white shadow-lg rounded-lg" onClick={claimPoints}>
             Claim Points
           </Button>
