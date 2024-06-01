@@ -414,8 +414,6 @@ export default function ZkLoginButton() {
     setBalances(new Map());
   }
 
-  /* HTML */
-
   const openIdProviders: OpenIdProvider[] = isLocalhost()
     ? ["Google", "Twitch", "Facebook"]
     : ["Google", "Twitch"]; // Facebook requires business verification to publish the app
