@@ -7,15 +7,14 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
 import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
 import { Transaction } from "@mysten/sui/transactions";
+import { adminPrivateKey } from "@/environment/keys";
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const { points, transactions } = data;
+    const { points, transaction } = data;
 
-    const kp_derive_0 = Ed25519Keypair.deriveKeypair(
-      process.env.PRIVATE_KEY + ""
-    );
+    const kp_derive_0 = Ed25519Keypair.deriveKeypair(adminPrivateKey);
     const pk = kp_derive_0.getPublicKey();
 
     const sender = pk.toSuiAddress();
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
       signature: serializedSignature,
     });
 
-    console.log("Result of Sui Call to Orchid Contract: ", res);
+    console.log("Result of Sui call to Orchid contract: ", res);
 
     return NextResponse.json({ success: true, points, res }, { status: 200 });
   } catch (error) {

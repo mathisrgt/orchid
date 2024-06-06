@@ -18,6 +18,7 @@ import {
   useSuiClient,
   useSuiClientQuery,
 } from "@mysten/dapp-kit";
+import { getFullnodeUrl } from "@mysten/sui/client";
 
 export interface Transaction {
   id: number;
@@ -61,7 +62,6 @@ export default function Dashboard() {
   } else {
     content = <div>Not connected</div>;
   }
-  /////////
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -110,92 +110,125 @@ export default function Dashboard() {
     }
   };
 
-  const claimPoints = () => {
-    const tx = new SuiTransaction();
-    tx.moveCall({
-      arguments: [
-        tx.object(
-          "0x3f4f9666b313ff320f7b4df8e7e820ecc960bb92da9fcaf0f5f1f11684473f95"
-        ), // Tresury Cap
-        tx.object(
-          "0x0fed44912487d6faaeb3cdfc5b53f6d0d69940b69e03533e97e7e762eff0e633"
-        ), // Transaction Registry
-        tx.pure.string("25-01-2024 10:32:21"), // Timestamp
-        tx.pure.string("0948094809480984"), // Card number
-        tx.pure.u64(1293), // Amount
-        tx.pure.address(
-          "0xbdc977c979c9ba1d7a3f4db86db6da37fd01295f327bf4467d615f55ed2d3bc4"
-        ), // Receiver address TO DO to be replaced by the wallet.address
-      ],
-      target: `0x087296ac5350b47df0e9b4aa8ba4f1c0f4224b8ef5589a39d79d7df9f2f5fecf::orchid::claim`,
-    });
+  const claimPoints = async () => {
+    if (account !== null) {
+      console.log("This call use the EOA.");
 
-    try {
-      signAndExecute(
-        {
-          transaction: tx,
+      const tx = new SuiTransaction();
+
+      tx.moveCall({
+        arguments: [
+          tx.object(
+            "0x3f4f9666b313ff320f7b4df8e7e820ecc960bb92da9fcaf0f5f1f11684473f95"
+          ), // Tresury Cap
+          tx.object(
+            "0x0fed44912487d6faaeb3cdfc5b53f6d0d69940b69e03533e97e7e762eff0e633"
+          ), // Transaction Registry
+          tx.pure.string("25-01-2024 10:32:21"), // Timestamp
+          tx.pure.string("0948094809480984"), // Card number
+          tx.pure.u64(1293), // Amount
+          tx.pure.address(account.address), // Receiver address
+        ],
+        target: `0x087296ac5350b47df0e9b4aa8ba4f1c0f4224b8ef5589a39d79d7df9f2f5fecf::orchid::claim`,
+      });
+
+      try {
+        signAndExecute(
+          {
+            transaction: tx,
+          },
+          {
+            onSuccess: async ({ digest }) => {
+              const tx = await suiClient.waitForTransaction({
+                digest,
+                options: {
+                  showEffects: true,
+                },
+              });
+
+              console.log("Transaction: ", tx);
+
+              // The first created object in this Transaction should be the new Counter
+              // const objectId = tx.effects?.created?.[0]?.reference?.objectId;
+              // if (objectId) {
+              //   props.onCreated(objectId);
+              // }
+            },
+          }
+        );
+      } catch (error) {
+        console.log("Error: ", error);
+      }
+
+      // if (accessToken) {
+      //   fetch(
+      //     `https://${process.env.NEXT_PUBLIC_DOMAINE}-sandbox.biapi.pro/2.0/users/me/transactions?limit=1000`,
+      //     {
+      //       method: "GET",
+      //       headers: {
+      //         Authorization: `Bearer ${accessToken}`,
+      //         "Content-Type": "application/json",
+      //       },
+      //     }
+      //   )
+      //     .then((response) => response.json())
+      //     .then((data) => {
+      //       console.log("data from getTransaction:", data);
+
+      //       // Filter transactions based on the criteria
+      //       const validTransactions = data.transactions.filter(
+      //         (transaction: Transaction) => transaction.wording === "MONOPRIX"
+      //       );
+      //       setTransactions(validTransactions);
+
+      //       // Store valid transactions in the cache
+      //       localStorage.setItem(
+      //         "validTransactions",
+      //         JSON.stringify(validTransactions)
+      //       );
+
+      //       // Calculate and set points
+      //       calculatePoints(validTransactions);
+      //     })
+      //     .catch((error) => {
+      //       console.error("Error:", error);
+      //     });
+      // } else {
+      //   console.log(
+      //     "Impossible to call Transaction function: access token is undefined."
+      //   );
+      // }
+    } else {
+      console.log("This call use the zkLogin account.");
+
+      try {
+        const response = await fetch("/api/mintToken", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: 1293,
+            transaction: {
+              timestamp: "25-01-2024 10:32:21",
+              cardNumber: "0948094809480984",
+              amount: 1293,
+              receiver:
+                "0xbdc977c979c9ba1d7a3f4db86db6da37fd01295f327bf4467d615f55ed2d3bc4",
+            },
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Token minted successfully:", data);
+        } else {
+          console.error("Failed to mint token");
         }
-        // {
-        //   onSuccess: async ({ digest }) => {
-        //     const tx = await suiClient.waitForTransaction({
-        //       digest,
-        //       options: {
-        //         showEffects: true,
-        //       },
-        //     });
-
-        //     // console.log("Transaction: ", tx);
-
-        //     // The first created object in this Transaction should be the new Counter
-        //     // const objectId = tx.effects?.created?.[0]?.reference?.objectId;
-        //     // if (objectId) {
-        //     //   props.onCreated(objectId);
-        //     // }
-        //   },
-        // }
-      );
-    } catch (error) {
-      console.log("Error: ", error);
+      } catch (error) {
+        console.error("Error:", error);
+      }
     }
-
-    // if (accessToken) {
-    //   fetch(
-    //     `https://${process.env.NEXT_PUBLIC_DOMAINE}-sandbox.biapi.pro/2.0/users/me/transactions?limit=1000`,
-    //     {
-    //       method: "GET",
-    //       headers: {
-    //         Authorization: `Bearer ${accessToken}`,
-    //         "Content-Type": "application/json",
-    //       },
-    //     }
-    //   )
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //       console.log("data from getTransaction:", data);
-
-    //       // Filter transactions based on the criteria
-    //       const validTransactions = data.transactions.filter(
-    //         (transaction: Transaction) => transaction.wording === "MONOPRIX"
-    //       );
-    //       setTransactions(validTransactions);
-
-    //       // Store valid transactions in the cache
-    //       localStorage.setItem(
-    //         "validTransactions",
-    //         JSON.stringify(validTransactions)
-    //       );
-
-    //       // Calculate and set points
-    //       calculatePoints(validTransactions);
-    //     })
-    //     .catch((error) => {
-    //       console.error("Error:", error);
-    //     });
-    // } else {
-    //   console.log(
-    //     "Impossible to call Transaction function: access token is undefined."
-    //   );
-    // }
   };
 
   const columns: Column<Transaction>[] = useMemo(
